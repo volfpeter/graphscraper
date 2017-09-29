@@ -6,16 +6,16 @@ The root package of the graphscraper project.
 # ------------------------------------------------------------
 
 # Expose the core modules for ease of use.
-from graphscraper import base
-from graphscraper import db
+from . import base
+from . import db
 
 # No need to expose the eventdispatcher module. It won't be needed by the user.
-# from graphscraper import eventdispatcher
+# from . import eventdispatcher
 
 # Do not import the rest of the modules, because they have dependencies that
 # might not be available on the user's machine.
-# from graphscraper import demo
-# from graphscraper import igraphwrapper
+# from . import demo
+# from . import igraphwrapper
 
 # Module constants
 # ------------------------------------------------------------
