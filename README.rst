@@ -3,10 +3,12 @@ GraphScraper
 
 GraphScraper is a Python 3 library that contains a base graph implementation designed
 to be turned into a web scraper for graph data. It has two major features:
+
 1) The graph automatically manages a database (using either SQLAlchemy or
-   Flask-SQLAlchemy) where it stores all the nodes and edges the graph has seen.
+Flask-SQLAlchemy) where it stores all the nodes and edges the graph has seen.
+
 2) The base graph implementation provides hook methods that, if implemented,
-   turn the graph into a web scraper.
+turn the graph into a web scraper.
 
 Demo - igraph
 ------------------
