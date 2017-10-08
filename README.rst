@@ -32,8 +32,8 @@ Dependencies
 -----------------
 
 The project requires SQLAlchemy_ or Flask-SQLAlchemy_ to be installed.
-If you wish to the included igraph-based graph implementation, you will also need
-igraph_ library.
+If you wish to use the included igraph-based graph implementation, you will also
+need the igraph_ library.
 
 Contribution
 -----------------
