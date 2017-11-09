@@ -38,12 +38,13 @@ class DBNode(object):
     # Initialization
     # ------------------------------------------------------------
 
-    def __init__(self, node_name: str):
+    def __init__(self, node_name: str, external_id: str = None):
         """
         Initialization.
 
         Arguments:
             node_name (str): The name of the node.
+            external_id (str): The external ID of the node.
         """
         # We must not only declare the properties but also initialize them,
         # otherwise the IDE will show warnings wherever the properties are accessed.
@@ -57,8 +58,12 @@ class DBNode(object):
         self.edges_where_target: List["DBEdge"] = []
         """The list of edges in the database where this node is the target."""
 
-        self.name: str = ""
+        self.name: str = node_name
         """The name of the node."""
+
+        self.external_id: Optional[str] = external_id.strip() if external_id is not None else None
+        """The external ID of the node."""
+
         raise NotImplementedError("DBNode is just an abstract base class that defines the "
                                   "interface of actual node model objects. {}".format(node_name))
 
@@ -110,6 +115,20 @@ class DBNode(object):
 
         Returns:
             The node with the given name if it exists.
+        """
+        raise NotImplementedError("DBNode is just an abstract base class that defines "
+                                  "the interface of actual node model objects.")
+
+    @classmethod
+    def find_by_external_id(cls, external_id: str) -> Optional["DBNode"]:
+        """
+        Returns the `DBNode` with the given external ID if such a node exists in the database.
+
+        Arguments:
+            external_id (str): The queried external ID.
+
+        Returns:
+            The node with the given external ID if it exists.
         """
         raise NotImplementedError("DBNode is just an abstract base class that defines "
                                   "the interface of actual node model objects.")
@@ -334,6 +353,7 @@ def create_graph_database_interface(db: Engine,
                                          default=False)
         name = db.Column(db.String(100),
                          primary_key=True)
+        external_id = db.Column(db.String(100))
 
         edges_where_source = relationship("DBEdge",
                                           primaryjoin="DBNode.name==DBEdge.source_name",
@@ -347,12 +367,13 @@ def create_graph_database_interface(db: Engine,
         # Initialization
         # ------------------------------------------------------------
 
-        def __init__(self, node_name: str):
+        def __init__(self, node_name: str, external_id: str = None):
             """
             Initialization.
 
             Arguments:
                 node_name (str): The name of the node.
+                external_id (str): The external ID of the node.
             """
             if node_name is None:
                 raise ValueError("Node name must not be None.")
@@ -362,6 +383,7 @@ def create_graph_database_interface(db: Engine,
                 raise ValueError("Node name must contain non-whitespace characters.")
 
             self.name = node_name
+            self.external_id = external_id.strip() if external_id is not None else None
 
         # Special methods
         # ------------------------------------------------------------
@@ -370,7 +392,7 @@ def create_graph_database_interface(db: Engine,
             """
             The string representation of the object.
             """
-            return "DBNode({})".format(self.name)
+            return "DBNode(name={}, external_id={})".format(self.name, self.external_id)
 
         # Properties
         # ------------------------------------------------------------
@@ -422,14 +444,13 @@ def create_graph_database_interface(db: Engine,
             The list of neighbors the node currently has in the database.
             """
             result: List[DBNode] = []
-            neighbors: List[DBNode] = [edge.source
-                                       for edge in DBEdge.query.filter_by(target_name=self.name)]
-            if neighbors:
+
+            neighbors: List[DBNode] = [edge.source for edge in DBEdge.query.filter_by(target_name=self.name)]
+            if neighbors is not None:
                 result.extend(neighbors)
 
-            neighbors = [edge.target
-                         for edge in DBEdge.query.filter_by(source_name=self.name)]
-            if neighbors:
+            neighbors = [edge.target for edge in DBEdge.query.filter_by(source_name=self.name)]
+            if neighbors is not None:
                 result.extend(neighbors)
 
             return result
@@ -449,6 +470,23 @@ def create_graph_database_interface(db: Engine,
                 The node with the given name if it exists.
             """
             return cls.query.filter_by(name=node_name).first()
+
+        @classmethod
+        def find_by_external_id(cls, external_id: str) -> Optional["DBNode"]:
+            """
+            Returns the `DBNode` with the given external ID if such a node exists in the database.
+
+            Arguments:
+                external_id (str): The queried external ID.
+
+            Returns:
+                The node with the given external ID if it exists.
+            """
+            if external_id is None:
+                return None
+
+            nodes: Optional[List[DBNode]] = cls.query.filter_by(external_id=external_id)
+            return nodes.first() if len(nodes) == 1 else None
 
     class DBEdge(declarative_meta):
         """

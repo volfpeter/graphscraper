@@ -22,7 +22,7 @@ class EventDispatcherBase(object):
     # Public methods
     # ------------------------------------------------------------
 
-    def add_event_listener(self, event_type: str, event_handler: types.MethodType):
+    def add_event_listener(self, event_type: str, event_handler: types.MethodType) -> None:
         """
         Registers the given event handler on the dispatcher for the given event type.
 
@@ -38,7 +38,7 @@ class EventDispatcherBase(object):
         raise NotImplementedError("EventDispatcherBase is abstract, "
                                   "its child classes must override all its methods.")
 
-    def dispatch_event(self, event: "Event"):
+    def dispatch_event(self, event: "Event") -> None:
         """
         Dispatches the given event.
 
@@ -54,7 +54,7 @@ class EventDispatcherBase(object):
         raise NotImplementedError("EventDispatcherBase is abstract, "
                                   "its child classes must override all its methods.")
 
-    def remove_event_listener(self, event_type: str, event_handler: types.MethodType):
+    def remove_event_listener(self, event_type: str, event_handler: types.MethodType) -> None:
         """
         Removes the given event listener registered on the dispatcher for the given event type.
 
@@ -85,7 +85,7 @@ class EventDispatcher(EventDispatcherBase):
     # Public methods
     # ------------------------------------------------------------
 
-    def add_event_listener(self, event_type: str, event_handler: types.MethodType):
+    def add_event_listener(self, event_type: str, event_handler: types.MethodType) -> None:
         """
         Registers the given event handler on the dispatcher for the given event type.
 
@@ -116,7 +116,7 @@ class EventDispatcher(EventDispatcherBase):
 
             listeners[event_handler] = True
 
-    def dispatch_event(self, event: "Event"):
+    def dispatch_event(self, event: "Event") -> None:
         """
         Dispatches the given event.
 
@@ -141,7 +141,7 @@ class EventDispatcher(EventDispatcherBase):
         for listener in listeners:
             listener(event)
 
-    def remove_event_listener(self, event_type: str, event_handler: types.MethodType):
+    def remove_event_listener(self, event_type: str, event_handler: types.MethodType) -> None:
         """
         Removes the given event listener registered on the dispatcher for the given event type.
 
@@ -206,7 +206,7 @@ class Event(object):
     # Public methods
     # ------------------------------------------------------------
 
-    def set_target(self, target: EventDispatcherBase):
+    def set_target(self, target: EventDispatcherBase) -> None:
         """
         This method should be called by the event dispatcher that dispatches this event
         to set its target property.

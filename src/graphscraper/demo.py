@@ -16,6 +16,7 @@ def create_graph(named: bool = False):
     if named:
         for v in g.vs:
             v["name"] = "Node-{}".format(v.index)
+            v["external_id"] = "Node-Ext-{}".format(v.index)
     return IGraphWrapper(g)
 
 
@@ -53,6 +54,22 @@ def test(graph: IGraphWrapper):
     print("Graph neighbors:")
     for index, neighbor in enumerate(node.neighbors):
         print("  - Neighbor {}: {}, {}, {}".format(index, neighbor.name, neighbor.igraph_index, neighbor.index))
+
+
+def test_spotify_artist_graph(client_id, client_key, artist_names):
+    from graphscraper.spotifyartist import SpotifyArtistGraph
+    from graphscraper.spotifyartist import SpotifyArtistNode
+    graph: SpotifyArtistGraph = SpotifyArtistGraph(client_id, client_key)
+    for artist_name in artist_names:
+        print("Querying {}".format(artist_name))
+        node: SpotifyArtistNode = graph.nodes.get_node_by_name(artist_name, can_validate_and_load=True)
+        if node is not None:
+            print("Queried name: {artist_name} | Artist name: {node.name} | Spotify ID: {node.external_id}"
+                  "\nNeighbors:".format(artist_name=artist_name, node=node))
+            for neighbor in node.neighbors:
+                print("  - {node.name}, {node.external_id}".format(node=neighbor))
+        else:
+            print("Artist not found for queried name: {}".format(artist_name))
 
 
 def demo():

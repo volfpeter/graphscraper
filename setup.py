@@ -8,7 +8,7 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.rst'), encodin
 
 setup(
     name="graphscraper",
-    version="0.1.1",
+    version="0.2.0",
     description="Graph implementation that loads graph data (nodes and edges) from external sources "
                 "and caches the loaded data in a database using sqlalchemy or flask-sqlalchemy.",
     long_description=long_description,

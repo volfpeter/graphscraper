@@ -37,7 +37,7 @@ class Node(EventDispatcher):
     # Initialization
     # ------------------------------------------------------------
 
-    def __init__(self, graph: "Graph", index: int, name: str):
+    def __init__(self, graph: "Graph", index: int, name: str, external_id: Optional[str] = None):
         """
         Initialization.
 
@@ -45,6 +45,7 @@ class Node(EventDispatcher):
              graph (Graph): The graph that owns this node.
              index (int): The unique index of the node in the graph.
              name (str): The name of the node.
+             external_id (Optional[str]): The external ID of the node.
         """
         EventDispatcher.__init__(self)
 
@@ -59,8 +60,10 @@ class Node(EventDispatcher):
 
         self.are_neighbors_cached: bool = False
         """Whether the neighbors of the node have already been added to the local cache."""
-        self.name = name
+        self.name: str = name
         """The name of the node."""
+        self.external_id: Optional[str] = external_id.strip() if external_id is not None else None
+        """The external ID of the node."""
 
     # Properties
     # ------------------------------------------------------------
@@ -143,12 +146,12 @@ class Node(EventDispatcher):
         self._are_neighbors_loaded = True
 
         graph: Graph = self._graph
-        neighbor_names: List[str] = graph.database.Node.find_by_name(self.name).neighbor_names
+        neighbors: List[DBNode] = graph.database.Node.find_by_name(self.name).neighbors
         nodes: NodeList = graph.nodes
 
-        for name in neighbor_names:
-            graph.add_node(name)
-            neighbor: Node = nodes.get_node_by_name(name)
+        for db_node in neighbors:
+            graph.add_node(db_node.name, db_node.external_id)
+            neighbor: Node = nodes.get_node_by_name(db_node.name)
             graph.add_edge(self, neighbor, 1, False)
 
     def _load_neighbors_from_external_source(self) -> None:
@@ -289,12 +292,13 @@ class NodeList(object):
     # Public methods
     # ------------------------------------------------------------
 
-    def add_node_by_name(self, node_name: str) -> None:
+    def add_node_by_name(self, node_name: str, external_id: Optional[str] = None) -> None:
         """
         Adds a new node to the graph if it doesn't exist.
 
         Arguments:
             node_name (str): The name of the node to add.
+            external_id (Optional[str]): The external ID of the node.
         """
         if node_name is None:
             return
@@ -303,9 +307,10 @@ class NodeList(object):
         if len(node_name) == 0:
             return
 
-        node: Node = self.get_node_by_name(node_name)
+        node: Node = self.get_node_by_name(node_name, external_id=external_id)
         if node is None:
             self._internal_add_node(node_name=node_name,
+                                    external_id=external_id,
                                     are_neighbors_cached=False,
                                     add_to_cache=True)
 
@@ -322,7 +327,9 @@ class NodeList(object):
         """
         return self._nodes.get(index)
 
-    def get_node_by_name(self, node_name: str, can_validate_and_load: bool = False) -> Optional[Node]:
+    def get_node_by_name(self, node_name: str,
+                         can_validate_and_load: bool = False,
+                         external_id: Optional[str] = None) -> Optional[Node]:
         """
         Returns the node with the given name if it exists either in the graph
         or in its database cache or `None` otherwise.
@@ -332,10 +339,13 @@ class NodeList(object):
             can_validate_and_load (bool): Whether `self._graph.get_authentic_node_name(node_name)`
                                           can be called to validate the node name and add the node
                                           to the graph if the node name is valid.
+            external_id (Optional[str]): An optional external ID that is used only if there no node
+                                         with the given name in the graph or in the cache and
+                                         `can_validate_and_load` is `True`.
 
         Returns:
             The node with the given name if it exists either in the graph
-            or in its database cache or `None` otherwise
+            or in its database cache, `None` otherwise.
         """
         node: Node = self._node_name_map.get(node_name)
         if node is not None:
@@ -343,36 +353,52 @@ class NodeList(object):
 
         db_node: DBNode = self._graph.database.Node.find_by_name(node_name)
         if db_node is None:
-            if can_validate_and_load and node_name == self._graph.get_authentic_node_name(node_name):
-                self._internal_add_node(node_name=node_name,
-                                        are_neighbors_cached=False,
-                                        add_to_cache=True)
+            if can_validate_and_load:
+                node_name = self._graph.get_authentic_node_name(node_name)
+                if node_name is not None:
+                    db_node = self._graph.database.Node.find_by_name(node_name)
+                    if db_node is None:
+                        self._internal_add_node(node_name=node_name,
+                                                external_id=external_id,
+                                                are_neighbors_cached=False,
+                                                add_to_cache=True)
+                    else:
+                        self._internal_add_node(node_name=db_node.name,
+                                                external_id=db_node.external_id,
+                                                are_neighbors_cached=db_node.are_neighbors_cached,
+                                                add_to_cache=False)
             else:
                 return None
         else:
-            self._internal_add_node(node_name=node_name,
+            self._internal_add_node(node_name=db_node.name,
+                                    external_id=db_node.external_id,
                                     are_neighbors_cached=db_node.are_neighbors_cached,
                                     add_to_cache=False)
+
         node = self._node_name_map.get(node_name)
+
         # Trying to load the cached neighbors of the created node from the database could
         # cause a very-very-very deep recursion, so don't even think about doing it here.
+
         return node
 
     # Private methods
     # ------------------------------------------------------------
 
-    def _create_node(self, index: int, name: str) -> Node:
+    def _create_node(self, index: int, name: str, external_id: Optional[str] = None) -> Node:
         """
         Returns a new `Node` instance with the given index and name.
 
         Arguments:
             index (int): The index of the node to create.
             name (str): The name of the node to create.
+            external_id (Optional[str]): The external ID of the node.
         """
-        return Node(graph=self._graph, index=index, name=name)
+        return Node(graph=self._graph, index=index, name=name, external_id=external_id)
 
     def _internal_add_node(self,
                            node_name: str,
+                           external_id: Optional[str] = None,
                            are_neighbors_cached: bool = False,
                            add_to_cache: bool = False) -> None:
         """
@@ -380,20 +406,21 @@ class NodeList(object):
 
         Arguments:
             node_name (str): The name of the node to add.
+            external_id (Optional[str]): The external ID of the node.
             are_neighbors_cached (bool): Whether the neighbors of the node have already been cached.
             add_to_cache (bool): Whether the node should also be created in the local cache.
         """
         index: int = len(self)
-        node: Node = self._create_node(index, node_name)
+        node: Node = self._create_node(index, node_name, external_id)
         node.are_neighbors_cached = are_neighbors_cached
         self._nodes[index] = node
         self._node_name_map[node_name] = node
 
         if add_to_cache:
             db: GraphDatabaseInterface = self._graph.database
-            db_node: DBNode = db.Node.find_by_name(node_name)
+            db_node: DBNode = db.Node.find_by_name(node.name)
             if db_node is None:
-                db_node = db.Node(node_name)
+                db_node = db.Node(node.name, node.external_id)
                 db_node.are_neighbors_cached = False
                 db.session.add(db_node)
                 db.session.commit()
@@ -599,8 +626,10 @@ class Graph(object):
     # Public methods
     # ------------------------------------------------------------
 
-    def add_edge(self, source: Node, target: Node,
-                 weight: float = 1, save_to_cache: bool = True) -> None:
+    def add_edge(self, source: Node,
+                 target: Node,
+                 weight: float = 1,
+                 save_to_cache: bool = True) -> None:
         """
         Adds an edge between the specified nodes of the graph.
 
@@ -647,14 +676,15 @@ class Graph(object):
             save_to_cache=save_to_cache
         )
 
-    def add_node(self, node_name: str) -> None:
+    def add_node(self, node_name: str, external_id: Optional[str] = None) -> None:
         """
         Adds the node with the given name to the graph.
 
         Arguments:
             node_name (str): The name of the node to add to the graph.
+            external_id (Optional[str]): The external ID of the node.
         """
-        self._nodes.add_node_by_name(node_name)
+        self._nodes.add_node_by_name(node_name, external_id)
 
     def get_authentic_node_name(self, node_name: str) -> Optional[str]:
         """

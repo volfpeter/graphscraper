@@ -20,20 +20,24 @@ can be used as a web scraper (to seamlessly load nodes and edges from some remot
 data source when that piece of data is needed) and that keeps all data (the graph)
 automatically up-to-date on the disk. GraphScraper aims to satisfy these requirements.
 
-Demo - igraph
-------------------
+Examples
+----------------------
 
-Besides the base graph implementation, a working demo using the igraph_ library
-is also included that shows how you can implement and use an actual graph-scraper.
-Instead of web-scraping, this demo uses an igraph graph instance as the "remote"
-source to scrape data from.
+Besides the base graph implementation, the following working examples are also included
+in the library, that show you how you can implement and use an actual graph scraper:
+
+- `igraphwrapper`: Instead of web-scraping, this example is using an igraph_ graph
+  instance as the "remote" source to scrape data from.
+- `spotifyartist`: This example is using the Spotify_ web API to load artists and
+  edges are defined by Artist similarity.
 
 Dependencies
 -----------------
 
 The project requires SQLAlchemy_ or Flask-SQLAlchemy_ to be installed.
-If you wish to use the included igraph-based graph implementation, you will also
-need the igraph_ library.
+
+If you wish to use one of the included graph implementations, then please read the
+corresponding module's description for additional requirements.
 
 Contribution
 -----------------
@@ -43,4 +47,5 @@ documentation, etc.) is welcome.
 
 .. _Flask-SQLAlchemy: http://flask-sqlalchemy.pocoo.org/
 .. _igraph: http://igraph.org
+.. _Spotify: https://developer.spotify.com/web-api/
 .. _SQLAlchemy: https://www.sqlalchemy.org/

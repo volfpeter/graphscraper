@@ -8,7 +8,7 @@ The wrapped igraph graph must be static once an `IGraphWrapper` starts using it.
 the way igraph stores a graph and indexes its components.)
 
 Requirements:
-    This module requires the `SQLAlchemy` and `igraph` (`python-igraph` on PyPi) libraries.
+    - This module requires the `SQLAlchemy` and `igraph` (`python-igraph` on PyPi) libraries.
 """
 
 from typing import List, Optional
@@ -138,7 +138,7 @@ class IGraphNode(Node):
     # Initialization
     # ------------------------------------------------------------
 
-    def __init__(self, graph: IGraphWrapper, index: int, name: str):
+    def __init__(self, graph: IGraphWrapper, index: int, name: str, external_id: Optional[str] = None):
         """
         Initialization.
 
@@ -146,8 +146,9 @@ class IGraphNode(Node):
              graph (IGraphWrapper): The graph that owns this node.
              index (int): The unique index of the node in the graph.
              name (str): The name of the node.
+             external_id (Optional[str]): The external ID of the node.
         """
-        super(IGraphNode, self).__init__(graph, index, name)
+        super(IGraphNode, self).__init__(graph, index, name, external_id)
 
         vertex: IGraphVertex = None
         try:
@@ -161,7 +162,7 @@ class IGraphNode(Node):
         self._igraph_index: int = vertex.index
         """The index of the corresponding node in the igraph `Graph` instance."""
 
-    # Private methods
+    # Properties
     # ------------------------------------------------------------
 
     @property
@@ -195,7 +196,14 @@ class IGraphNode(Node):
             except KeyError:
                 name: str = str(ig_neighbor.index)
 
-            neighbor: IGraphNode = graph.nodes.get_node_by_name(name, can_validate_and_load=True)
+            try:
+                external_id: Optional[str] = ig_neighbor["external_id"]
+            except KeyError:
+                external_id: Optional[str] = None
+
+            neighbor: IGraphNode = graph.nodes.get_node_by_name(name,
+                                                                can_validate_and_load=True,
+                                                                external_id=external_id)
             graph.add_edge(self, neighbor)
 
 
@@ -207,12 +215,13 @@ class IGraphNodeList(NodeList):
     # Private methods
     # ------------------------------------------------------------
 
-    def _create_node(self, index: int, name: str) -> IGraphNode:
+    def _create_node(self, index: int, name: str, external_id: Optional[str] = None) -> IGraphNode:
         """
         Returns a new `IGraphNode` instance with the given index and name.
 
         Arguments:
             index (int): The index of the node to create.
             name (str): The name of the node to create.
+            external_id (Optional[str]): The external ID of the node.
         """
-        return IGraphNode(graph=self._graph, index=index, name=name)
+        return IGraphNode(graph=self._graph, index=index, name=name, external_id=external_id)
