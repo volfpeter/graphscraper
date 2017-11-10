@@ -44,6 +44,7 @@ class SpotifyArtistGraph(Graph):
     def __init__(self,
                  client_id: str,
                  client_key: str,
+                 neighbor_count: int = 6,
                  database: Optional[GraphDatabaseInterface] = None):
         """
         Initialization.
@@ -53,16 +54,21 @@ class SpotifyArtistGraph(Graph):
         Arguments:
             client_id (str): The Spotify API client ID to use.
             client_key (str): The Spotify API cliend secret key corresponding to the client ID.
+            neighbor_count (int): The number of neighbors to load for any given node.
             database (Optional[GraphDatabaseInterface]): The database interface the graph is using.
         """
         if database is None:
-            database = SpotifyArtistGraph._create_default_database()
+            database = SpotifyArtistGraph.create_default_database()
 
         super(SpotifyArtistGraph, self).__init__(database)
 
         self._client: SpotifyClient = SpotifyClient(client_id, client_key)
         """
         The Spotify web API client to use to request data.
+        """
+        self._neighbor_count: int = neighbor_count
+        """
+        The number of neighbors to load for any given node.
         """
 
     # Static methods
@@ -75,11 +81,18 @@ class SpotifyArtistGraph(Graph):
         """
         return self._client
 
+    @property
+    def neighbor_count(self) -> int:
+        """
+        The number of neighbors to load for any given node.
+        """
+        return self._neighbor_count
+
     # Static methods
     # ------------------------------------------------------------
 
     @staticmethod
-    def _create_default_database(reset: bool = False) -> GraphDatabaseInterface:
+    def create_default_database(reset: bool = False) -> GraphDatabaseInterface:
         """
         Creates and returns a default SQLAlchemy database interface to use.
 
@@ -145,7 +158,7 @@ class SpotifyArtistNode(Node):
     `Node` extension that loads its neighbors from Spotify using the Artist API.
     """
 
-    _NEIGHBORS_TO_LOAD: int = 7
+    _NEIGHBORS_TO_LOAD: int = 6
     """
     The number of neighbors to load from the Spotify web API for a node.
     """
@@ -178,8 +191,11 @@ class SpotifyArtistNode(Node):
         wrapped by the graph that has this node.
         """
         graph: SpotifyArtistGraph = self._graph
-        items: List[NameExternalIDPair] =\
-            graph.client.similar_artists(self.external_id, self._NEIGHBORS_TO_LOAD)
+        items: List[NameExternalIDPair] = graph.client.similar_artists(self.external_id)
+
+        limit: int = graph.neighbor_count if graph.neighbor_count > 0 else self._NEIGHBORS_TO_LOAD
+        if len(items) > limit:
+            del items[limit:]
 
         for item in items:
             neighbor: SpotifyArtistNode = graph.nodes.get_node_by_name(item.name,
@@ -358,14 +374,13 @@ class SpotifyClient(object):
 
         return result
 
-    def similar_artists(self, artist_id: str, limit: int = 50) -> List[NameExternalIDPair]:
+    def similar_artists(self, artist_id: str) -> List[NameExternalIDPair]:
         """
         Returns zero or more similar artists (in the form of artist name - external ID pairs)
         to the one corresponding to the given artist ID.
 
         Arguments:
             artist_id ([str]): The Spotify ID of the artist for whom similar artists are requested.
-            limit (int): The maximum number of results to return.
 
         Returns:
             Zero or more artist name - external ID pairs.
@@ -376,8 +391,7 @@ class SpotifyClient(object):
         """
         response: requests.Response = requests.get(
             self._API_URL_TEMPLATE.format("artists/{}/related-artists".format(artist_id)),
-            headers={"Authorization": "Bearer {}".format(self._token.access_token)},
-            params={"limit": limit}
+            headers={"Authorization": "Bearer {}".format(self._token.access_token)}
         )
 
         # TODO: handle API rate limiting
