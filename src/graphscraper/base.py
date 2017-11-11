@@ -356,6 +356,10 @@ class NodeList(object):
             if can_validate_and_load:
                 node_name = self._graph.get_authentic_node_name(node_name)
                 if node_name is not None:
+                    node = self._node_name_map.get(node_name)
+                    if node is not None:
+                        return node
+
                     db_node = self._graph.database.Node.find_by_name(node_name)
                     if db_node is None:
                         self._internal_add_node(node_name=node_name,
