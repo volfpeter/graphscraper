@@ -201,7 +201,14 @@ class SpotifyArtistNode(Node):
             neighbor: SpotifyArtistNode = graph.nodes.get_node_by_name(item.name,
                                                                        can_validate_and_load=True,
                                                                        external_id=item.external_id)
-            graph.add_edge(self, neighbor)
+
+            # Strangely we need this guard because the Spofity API's search method doesn't
+            # recognise certain artist names.
+            # Actually it could also be a bug in SpotifyClient.search_artists_by_name(),
+            # the artist name sent as a request parameter may not be encoded 100% correctly...
+            # Anyway, this is a working hotfix.
+            if neighbor is not None:
+                graph.add_edge(self, neighbor)
 
 
 class SpotifyArtistNodeList(NodeList):
