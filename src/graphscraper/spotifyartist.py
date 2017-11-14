@@ -374,8 +374,8 @@ class SpotifyClient(object):
         result: List[NameExternalIDPair] = []
         data: List[Dict] = response.json()["artists"]["items"]
         for artist in data:
-            artist = NameExternalIDPair(artist["name"], artist["id"])
-            if artist.name is None or artist.external_id is None:
+            artist = NameExternalIDPair(artist["name"].strip(), artist["id"].strip())
+            if not artist.name or not artist.external_id:
                 raise SpotifyClientError("Name or ID is missing")
             result.append(artist)
 
