@@ -1,3 +1,5 @@
+|Downloads|
+
 GraphScraper
 =================
 
@@ -49,3 +51,4 @@ documentation, etc.) is welcome.
 .. _igraph: http://igraph.org
 .. _Spotify: https://developer.spotify.com/web-api/
 .. _SQLAlchemy: https://www.sqlalchemy.org/
+.. |Downloads| image:: https://pepy.tech/badge/graphscraper
