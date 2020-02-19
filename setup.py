@@ -8,7 +8,7 @@ with open(path.join(path.abspath(path.dirname(__file__)), 'README.rst'), encodin
 
 setup(
     name="graphscraper",
-    version="0.4.0",
+    version="0.5.0",
     description="Graph implementation that loads graph data (nodes and edges) from external sources "
                 "and caches the loaded data in a database using sqlalchemy or flask-sqlalchemy.",
     long_description=long_description,
@@ -33,5 +33,6 @@ setup(
     keywords="graph network webscraping sqlalchemy database db caching",
     package_dir={"": "src"},
     packages=find_packages("src"),
-    python_requires=">=3"
+    python_requires=">=3",
+    install_requires=["sqlalchemy>=1.3"]
 )

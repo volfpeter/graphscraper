@@ -36,8 +36,6 @@ in the library, that show you how you can implement and use an actual graph scra
 Dependencies
 -----------------
 
-The project requires SQLAlchemy_ or Flask-SQLAlchemy_ to be installed.
-
 If you wish to use one of the included graph implementations, then please read the
 corresponding module's description for additional requirements.
 
@@ -47,8 +45,6 @@ Contribution
 Any form of constructive contribution (feedback, features, bug fixes, tests, additional
 documentation, etc.) is welcome.
 
-.. _Flask-SQLAlchemy: http://flask-sqlalchemy.pocoo.org/
 .. _igraph: http://igraph.org
 .. _Spotify: https://developer.spotify.com/web-api/
-.. _SQLAlchemy: https://www.sqlalchemy.org/
 .. |Downloads| image:: https://pepy.tech/badge/graphscraper
