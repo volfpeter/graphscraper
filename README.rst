@@ -42,7 +42,7 @@ More graph implementations
 Related projects
 ------------------------
 
-- local-clustering_: a local graph clustering algorithm
+- localclustering_: a local graph clustering algorithm
 
 Dependencies
 -----------------
@@ -57,7 +57,7 @@ Any form of constructive contribution (feedback, features, bug fixes, tests, add
 documentation, etc.) is welcome.
 
 .. _igraph: http://igraph.org
-.. _local-clustering: https://github.com/volfpeter/localclustering
+.. _localclustering: https://github.com/volfpeter/localclustering
 .. _Spotify: https://developer.spotify.com/web-api/
 .. |Downloads| image:: https://pepy.tech/badge/graphscraper
 .. _USPTO: https://github.com/volfpeter/uspto-patent-citation-graph
