@@ -32,6 +32,17 @@ in the library, that show you how you can implement and use an actual graph scra
   instance as the "remote" source to scrape data from.
 - `spotifyartist`: This example is using the Spotify_ web API to load artists and
   edges are defined by Artist similarity.
+  
+More graph implementations
+----------------------------------
+
+- USPTO_ patent citation graph
+- Mastodon_ social graph
+
+Related projects
+------------------------
+
+- local-clustering_: a local graph clustering algorithm
 
 Dependencies
 -----------------
@@ -46,5 +57,8 @@ Any form of constructive contribution (feedback, features, bug fixes, tests, add
 documentation, etc.) is welcome.
 
 .. _igraph: http://igraph.org
+.. _local-clustering: https://github.com/volfpeter/localclustering
 .. _Spotify: https://developer.spotify.com/web-api/
 .. |Downloads| image:: https://pepy.tech/badge/graphscraper
+.. _USPTO: https://github.com/volfpeter/uspto-patent-citation-graph
+.. _Mastodon: https://github.com/volfpeter/mastodon-social-graph
